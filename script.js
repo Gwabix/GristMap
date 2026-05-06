@@ -264,7 +264,7 @@
                 { name: "Latitude", title: "Latitude", type: "Numeric" },
                 { name: "Longitude", title: "Longitude", type: "Numeric" },
                 { name: "Primary", title: "Domaines", type: "Text", allowMultiple: true },
-                { name: "Secondary", title: "Niveaux", type: "Numeric", allowMultiple: true },
+                { name: "Secondary", title: "Niveaux", type: "Int", allowMultiple: true },
             ],
         });
 
