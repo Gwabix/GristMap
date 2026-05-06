@@ -14,6 +14,23 @@
     let activePrimary = new Set();
     let activeSecondary = new Set();
 
+    function toArray(value) {
+        if (Array.isArray(value)) {
+            return value.filter((v) => typeof v === "string" && v.length > 0);
+        }
+        if (typeof value === "string" && value.length > 0) {
+            return [value];
+        }
+        return [];
+    }
+
+    function arraysEqual(a, b) {
+        if (a.length !== b.length) {
+            return false;
+        }
+        return a.every((value, index) => value === b[index]);
+    }
+
     function ensureMap() {
         if (map || typeof L === "undefined") {
             return;
@@ -230,23 +247,36 @@
         });
     }
 
-    function applyConfig(options) {
-        const mappings = options.mappings ?? {};
-        colName = mappings.Name ?? null;
-        colLat = mappings.Latitude ?? null;
-        colLng = mappings.Longitude ?? null;
-        colsPrimary = mappings.Primary ?? [];
-        colsSecondary = mappings.Secondary ?? [];
+    function applyMappings(mappings) {
+        const nextColName = typeof mappings?.Name === "string" ? mappings.Name : null;
+        const nextColLat = typeof mappings?.Latitude === "string" ? mappings.Latitude : null;
+        const nextColLng = typeof mappings?.Longitude === "string" ? mappings.Longitude : null;
+        const nextColsPrimary = toArray(mappings?.Primary);
+        const nextColsSecondary = toArray(mappings?.Secondary);
 
-        if (typeof colsPrimary === "string") colsPrimary = [colsPrimary];
-        if (typeof colsSecondary === "string") colsSecondary = [colsSecondary];
+        const mappingChanged =
+            colName !== nextColName ||
+            colLat !== nextColLat ||
+            colLng !== nextColLng ||
+            !arraysEqual(colsPrimary, nextColsPrimary) ||
+            !arraysEqual(colsSecondary, nextColsSecondary);
 
-        const ready = colName && colLat && colLng && colsPrimary.length > 0 && colsSecondary.length > 0;
+        colName = nextColName;
+        colLat = nextColLat;
+        colLng = nextColLng;
+        colsPrimary = nextColsPrimary;
+        colsSecondary = nextColsSecondary;
+
+        const ready = Boolean(colName && colLat && colLng && colsPrimary.length > 0 && colsSecondary.length > 0);
         document.getElementById("no-config").classList.toggle("hidden", ready);
 
         if (ready) {
-            buildFilters();
+            if (mappingChanged) {
+                buildFilters();
+            }
             renderMap();
+        } else if (markersLayer) {
+            markersLayer.clearLayers();
         }
     }
 
@@ -268,14 +298,10 @@
             ],
         });
 
-        grist.onOptions((options) => {
-            applyConfig(options ?? {});
-        });
-
         grist.onRecords((records, mappings) => {
-            allRows = grist.mapColumnNames(records, mappings) ?? [];
             ensureMap();
-            renderMap();
+            allRows = Array.isArray(records) ? records : [];
+            applyMappings(mappings ?? null);
         });
 
         ensureMap();
