@@ -93,10 +93,20 @@
     function colorForCount(count, min, max) {
         if (max === min) return "#1a73e8";
         const t = (count - min) / (max - min);
-        const r = Math.round(255 * (1 - t) + 26 * t);
-        const g = Math.round(200 * (1 - t) * (1 - Math.abs(t - 0.5) * 2) + 115 * t + 180 * Math.min(t, 1 - t));
-        const b = Math.round(0 * (1 - t) + 232 * t);
-        return `rgb(${r},${Math.min(255, Math.max(0, g))},${b})`;
+        // t=0 → jaune rgb(255,200,0) | t=0.5 → vert rgb(0,180,0) | t=1 → bleu rgb(26,115,232)
+        let r, g, b;
+        if (t <= 0.5) {
+            const s = t * 2;
+            r = Math.round(255 * (1 - s));
+            g = Math.round(200 - 20 * s);
+            b = 0;
+        } else {
+            const s = (t - 0.5) * 2;
+            r = Math.round(26 * s);
+            g = Math.round(180 * (1 - s) + 115 * s);
+            b = Math.round(232 * s);
+        }
+        return `rgb(${r},${g},${b})`;
     }
 
     function buildPopupHtml(groupRows, singleDomain) {
@@ -159,6 +169,7 @@
         const maxCount = Math.max(...counts);
 
         const singleDomain = activePrimary.size === 1;
+        const bounds = L.latLngBounds();
 
         for (const { lat, lng, rows } of groups.values()) {
             const count = rows.length;
@@ -171,8 +182,12 @@
           background:${color};border:2px solid #fff;
           box-shadow:0 1px 4px rgba(0,0,0,.4);
           display:flex;align-items:center;justify-content:center;
-          color:#fff;font-weight:700;font-size:12px;
-        ">${count > 1 ? count : ""}</div>`,
+        "><span style="
+          background:rgba(40,40,40,0.55);border-radius:50%;
+          width:16px;height:16px;
+          display:flex;align-items:center;justify-content:center;
+          color:#fff;font-weight:700;font-size:11px;line-height:1;
+        ">${count}</span></div>`,
                 iconSize: [28, 28],
                 iconAnchor: [14, 14],
                 popupAnchor: [0, -16],
@@ -180,6 +195,11 @@
 
             const popup = L.popup({ maxWidth: 320 }).setContent(buildPopupHtml(rows, singleDomain));
             L.marker([lat, lng], { icon }).bindPopup(popup).addTo(markersLayer);
+            bounds.extend([lat, lng]);
+        }
+
+        if (bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
         }
     }
 
