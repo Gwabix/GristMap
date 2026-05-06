@@ -31,9 +31,22 @@
         return a.every((value, index) => value === b[index]);
     }
 
+    function showNoConfigMessage(message) {
+        const panel = document.getElementById("no-config");
+        const text = panel.querySelector("span");
+        if (text) {
+            text.textContent = message;
+        }
+        panel.classList.remove("hidden");
+    }
+
     function ensureMap() {
-        if (map || typeof L === "undefined") {
-            return;
+        if (map) {
+            return true;
+        }
+        if (typeof L === "undefined") {
+            showNoConfigMessage("La bibliotheque de carte (Leaflet) ne s'est pas chargee. Verifiez le reseau/CSP puis rechargez le widget.");
+            return false;
         }
         map = L.map("map").setView([46.8, 2.3], 6);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -41,6 +54,8 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map);
         markersLayer = L.layerGroup().addTo(map);
+        setTimeout(() => map.invalidateSize(), 0);
+        return true;
     }
 
     function escapeHtml(str) {
@@ -299,12 +314,20 @@
         });
 
         grist.onRecords((records, mappings) => {
-            ensureMap();
+            const mapReady = ensureMap();
             allRows = Array.isArray(records) ? records : [];
             applyMappings(mappings ?? null);
+            if (mapReady && map) {
+                setTimeout(() => map.invalidateSize(), 0);
+            }
         });
 
         ensureMap();
+        window.addEventListener("resize", () => {
+            if (map) {
+                map.invalidateSize();
+            }
+        });
     }
 
     document.addEventListener("DOMContentLoaded", init);
