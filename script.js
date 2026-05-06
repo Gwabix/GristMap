@@ -1,14 +1,8 @@
 (function () {
     "use strict";
 
-    const map = L.map("map").setView([46.8, 2.3], 6);
-
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    let markersLayer = L.layerGroup().addTo(map);
+    let map = null;
+    let markersLayer = null;
 
     let colName = null;
     let colLat = null;
@@ -19,6 +13,18 @@
     let allRows = [];
     let activePrimary = new Set();
     let activeSecondary = new Set();
+
+    function ensureMap() {
+        if (map || typeof L === "undefined") {
+            return;
+        }
+        map = L.map("map").setView([46.8, 2.3], 6);
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        }).addTo(map);
+        markersLayer = L.layerGroup().addTo(map);
+    }
 
     function escapeHtml(str) {
         return String(str ?? "")
@@ -95,6 +101,9 @@
     }
 
     function renderMap() {
+        if (!markersLayer) {
+            return;
+        }
         markersLayer.clearLayers();
 
         const filtered = allRows.filter(rowMatchesFilters);
@@ -251,9 +260,9 @@
         grist.ready({
             requiredAccess: "read table",
             columns: [
-                { name: "Name", title: "Nom", type: "Text", strictType: true },
-                { name: "Latitude", title: "Latitude", type: "Numeric", strictType: true },
-                { name: "Longitude", title: "Longitude", type: "Numeric", strictType: true },
+                { name: "Name", title: "Nom", type: "Text" },
+                { name: "Latitude", title: "Latitude", type: "Numeric" },
+                { name: "Longitude", title: "Longitude", type: "Numeric" },
                 { name: "Primary", title: "Domaines", type: "Text", allowMultiple: true },
                 { name: "Secondary", title: "Niveaux", type: "Numeric", allowMultiple: true },
             ],
@@ -265,8 +274,11 @@
 
         grist.onRecords((records, mappings) => {
             allRows = grist.mapColumnNames(records, mappings) ?? [];
+            ensureMap();
             renderMap();
         });
+
+        ensureMap();
     }
 
     document.addEventListener("DOMContentLoaded", init);
