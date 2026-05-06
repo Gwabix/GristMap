@@ -181,7 +181,7 @@
 
         for (const { lat, lng, rows } of groups.values()) {
             const matchCount = rows.filter(rowMatchesFilters).length;
-            const count = rows.length;
+            const count = matchCount;
             const color = matchCount > 0
                 ? colorForCount(matchCount, minCount, maxCount)
                 : "#9ca3af";
