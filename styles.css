@@ -37,6 +37,30 @@ body {
     background: #fff;
     flex-shrink: 0;
     color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#toggle-hidden {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+#toggle-hidden:hover {
+    background: #e9ecef;
+    color: #111827;
+}
+
+#toggle-hidden[aria-pressed="true"] {
+    color: #1a73e8;
 }
 
 #sidebar-content {
@@ -61,7 +85,7 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     background: #fff;
-    max-height: 180px;
+    height: auto;
     overflow-y: auto;
 }
 

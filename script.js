@@ -13,6 +13,7 @@
     let allRows = [];
     let activePrimary = new Set();
     let activeSecondary = new Set();
+    let showHidden = false;
 
     function toArray(value) {
         if (Array.isArray(value)) {
@@ -90,6 +91,13 @@
         return hasPrimary && hasSecondary;
     }
 
+    function rowIsVisible(row) {
+        if (rowMatchesFilters(row)) {
+            return true;
+        }
+        return showHidden;
+    }
+
     function colorForCount(count, min, max) {
         if (max === min) return "#1a73e8";
         const t = (count - min) / (max - min);
@@ -152,7 +160,7 @@
         }
         markersLayer.clearLayers();
 
-        const filtered = allRows.filter(rowMatchesFilters);
+        const filtered = allRows.filter(rowIsVisible);
 
         const groups = new Map();
         for (const row of filtered) {
@@ -164,16 +172,19 @@
             groups.get(key).rows.push(row);
         }
 
-        const counts = [...groups.values()].map((g) => g.rows.length);
-        const minCount = Math.min(...counts);
-        const maxCount = Math.max(...counts);
+        const matchCounts = [...groups.values()].map((g) => g.rows.filter(rowMatchesFilters).length).filter((n) => n > 0);
+        const minCount = matchCounts.length > 0 ? Math.min(...matchCounts) : 0;
+        const maxCount = matchCounts.length > 0 ? Math.max(...matchCounts) : 0;
 
         const singleDomain = activePrimary.size === 1;
         const bounds = L.latLngBounds();
 
         for (const { lat, lng, rows } of groups.values()) {
+            const matchCount = rows.filter(rowMatchesFilters).length;
             const count = rows.length;
-            const color = colorForCount(count, minCount, maxCount);
+            const color = matchCount > 0
+                ? colorForCount(matchCount, minCount, maxCount)
+                : "#9ca3af";
 
             const icon = L.divIcon({
                 className: "",
@@ -344,6 +355,17 @@
                 map.invalidateSize();
             }
         });
+
+        const toggleBtn = document.getElementById("toggle-hidden");
+        if (toggleBtn) {
+            toggleBtn.addEventListener("click", () => {
+                showHidden = !showHidden;
+                toggleBtn.setAttribute("aria-pressed", String(showHidden));
+                document.getElementById("icon-eye-open").style.display = showHidden ? "none" : "";
+                document.getElementById("icon-eye-closed").style.display = showHidden ? "" : "none";
+                renderMap();
+            });
+        }
     }
 
     document.addEventListener("DOMContentLoaded", init);
