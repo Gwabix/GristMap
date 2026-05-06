@@ -182,6 +182,7 @@
         for (const { lat, lng, rows } of groups.values()) {
             const matchCount = rows.filter(rowMatchesFilters).length;
             const count = matchCount;
+            const countLabel = count > 0 ? String(count) : "";
             const color = matchCount > 0
                 ? colorForCount(matchCount, minCount, maxCount)
                 : "#9ca3af";
@@ -198,7 +199,7 @@
           width:16px;height:16px;
           display:flex;align-items:center;justify-content:center;
           color:#fff;font-weight:700;font-size:11px;line-height:1;
-        ">${count}</span></div>`,
+                ">${countLabel}</span></div>`,
                 iconSize: [28, 28],
                 iconAnchor: [14, 14],
                 popupAnchor: [0, -16],
