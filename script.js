@@ -77,8 +77,12 @@
     }
 
     function rowMatchesFilters(row) {
-        const primaryCols = activePrimary.size > 0 ? [...activePrimary] : colsPrimary;
-        const secondaryCols = activeSecondary.size > 0 ? [...activeSecondary] : colsSecondary;
+        const primaryCols = [...activePrimary];
+        const secondaryCols = [...activeSecondary];
+
+        if (primaryCols.length === 0 || secondaryCols.length === 0) {
+            return false;
+        }
 
         const hasPrimary = primaryCols.some((col) => isNonEmpty(row[col]));
         const hasSecondary = secondaryCols.some((col) => isNumericNonZero(row[col]));
@@ -99,7 +103,7 @@
         const name = escapeHtml(groupRows[0][colName] ?? "");
         let html = `<h3>${name}</h3>`;
 
-        const domainsToShow = activePrimary.size > 0 ? [...activePrimary] : colsPrimary;
+        const domainsToShow = [...activePrimary];
 
         for (const domCol of domainsToShow) {
             const projects = groupRows.filter((r) => isNonEmpty(r[domCol]) && rowMatchesFilters(r));
@@ -117,7 +121,7 @@
                     const levelStr = levelParts.length > 0 ? ` (${levelParts.join(", ")})` : "";
                     html += `<li>${projName}${escapeHtml(levelStr)}</li>`;
                 } else {
-                    const secondaryCols = activeSecondary.size > 0 ? [...activeSecondary] : colsSecondary;
+                    const secondaryCols = [...activeSecondary];
                     const levelParts = secondaryCols
                         .filter((lc) => isNumericNonZero(proj[lc]))
                         .map((lc) => escapeHtml(lc));
@@ -183,6 +187,11 @@
         const container = document.getElementById(containerId);
         container.innerHTML = "";
 
+        activeSet.clear();
+        for (const col of cols) {
+            activeSet.add(col);
+        }
+
         const allId = `${containerId}-all`;
         const allItem = document.createElement("div");
         allItem.className = "filter-item select-all";
@@ -198,8 +207,9 @@
 
         const itemCheckboxes = [];
 
-        for (const col of cols) {
-            const id = `${containerId}-${col}`;
+        for (let index = 0; index < cols.length; index += 1) {
+            const col = cols[index];
+            const id = `${containerId}-${index}`;
             const item = document.createElement("div");
             item.className = "filter-item";
             const cb = document.createElement("input");
@@ -216,9 +226,9 @@
 
             cb.addEventListener("change", () => {
                 if (cb.checked) {
-                    activeSet.delete(col);
-                } else {
                     activeSet.add(col);
+                } else {
+                    activeSet.delete(col);
                 }
                 const allChecked = itemCheckboxes.every((c) => c.checked);
                 allCb.checked = allChecked;
@@ -230,9 +240,9 @@
             for (const cb of itemCheckboxes) {
                 cb.checked = allCb.checked;
                 if (allCb.checked) {
-                    activeSet.delete(cb.dataset.col);
-                } else {
                     activeSet.add(cb.dataset.col);
+                } else {
+                    activeSet.delete(cb.dataset.col);
                 }
             }
             onChange();
@@ -240,24 +250,10 @@
     }
 
     function buildFilters() {
-        activePrimary.clear();
-        activeSecondary.clear();
         buildFilterList("filter-primary", colsPrimary, activePrimary, () => {
-            activePrimary = new Set(
-                colsPrimary.filter((c) => {
-                    const cb = document.querySelector(`#filter-primary-${CSS.escape(c)}`);
-                    return cb && !cb.checked;
-                })
-            );
             renderMap();
         });
         buildFilterList("filter-secondary", colsSecondary, activeSecondary, () => {
-            activeSecondary = new Set(
-                colsSecondary.filter((c) => {
-                    const cb = document.querySelector(`#filter-secondary-${CSS.escape(c)}`);
-                    return cb && !cb.checked;
-                })
-            );
             renderMap();
         });
     }
