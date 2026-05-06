@@ -358,11 +358,16 @@
 
         const toggleBtn = document.getElementById("toggle-hidden");
         if (toggleBtn) {
+            const updateToggleUi = () => {
+                toggleBtn.setAttribute("aria-pressed", String(showHidden));
+                document.getElementById("icon-eye-open").style.display = showHidden ? "" : "none";
+                document.getElementById("icon-eye-closed").style.display = showHidden ? "none" : "";
+            };
+
+            updateToggleUi();
             toggleBtn.addEventListener("click", () => {
                 showHidden = !showHidden;
-                toggleBtn.setAttribute("aria-pressed", String(showHidden));
-                document.getElementById("icon-eye-open").style.display = showHidden ? "none" : "";
-                document.getElementById("icon-eye-closed").style.display = showHidden ? "" : "none";
+                updateToggleUi();
                 renderMap();
             });
         }
