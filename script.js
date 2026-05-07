@@ -93,7 +93,7 @@
 
                     if (name.includes("Mende")) {
                         return {
-                            color: "#b91c1c",
+                            color: "#3bb91c",
                             weight: 3,
                             opacity: 0.85,
                             dashArray: "8 6",
