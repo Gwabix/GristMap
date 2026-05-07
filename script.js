@@ -3,6 +3,9 @@
 
     let map = null;
     let markersLayer = null;
+    let departmentLayer = null;
+    let circoLayer = null;
+    let overlaysLoaded = false;
 
     let colName = null;
     let colLat = null;
@@ -42,6 +45,107 @@
         panel.classList.remove("hidden");
     }
 
+    function hideNoConfigMessage() {
+        document.getElementById("no-config").classList.add("hidden");
+    }
+
+    function normalizeFeatureName(value) {
+        return String(value ?? "").replace(/\s+/g, " ").trim();
+    }
+
+    async function loadMapOverlays() {
+        if (!map || overlaysLoaded) {
+            return;
+        }
+
+        overlaysLoaded = true;
+
+        try {
+            const [departmentResponse, circoResponse] = await Promise.all([
+                fetch("./Limites_Lozere.geojson"),
+                fetch("./Limites_Circos.geojson"),
+            ]);
+
+            if (!departmentResponse.ok || !circoResponse.ok) {
+                throw new Error("Impossible de charger les couches GeoJSON.");
+            }
+
+            const [departmentData, circoData] = await Promise.all([
+                departmentResponse.json(),
+                circoResponse.json(),
+            ]);
+
+            departmentLayer = L.geoJSON(departmentData, {
+                pane: "overlayPane",
+                style: {
+                    color: "#1f2937",
+                    weight: 2,
+                    opacity: 0.85,
+                    fillColor: "#93c5fd",
+                    fillOpacity: 0.08,
+                },
+            }).addTo(map);
+
+            circoLayer = L.geoJSON(circoData, {
+                pane: "overlayPane",
+                style: (feature) => {
+                    const name = normalizeFeatureName(feature?.properties?.Name);
+
+                    if (name.includes("Mende")) {
+                        return {
+                            color: "#b91c1c",
+                            weight: 3,
+                            opacity: 0.85,
+                            dashArray: "8 6",
+                        };
+                    }
+
+                    if (name.includes("Marvejols")) {
+                        return {
+                            color: "#0f766e",
+                            weight: 3,
+                            opacity: 0.85,
+                            dashArray: "8 6",
+                        };
+                    }
+
+                    return {
+                        color: "#7c3aed",
+                        weight: 3,
+                        opacity: 0.85,
+                        dashArray: "8 6",
+                    };
+                },
+                onEachFeature: (feature, layer) => {
+                    const name = normalizeFeatureName(feature?.properties?.Name);
+
+                    if (name) {
+                        layer.bindPopup(`<strong>${escapeHtml(name)}</strong>`);
+                    }
+                },
+            }).addTo(map);
+
+            const overlayBounds = L.latLngBounds();
+
+            if (departmentLayer && departmentLayer.getBounds().isValid()) {
+                overlayBounds.extend(departmentLayer.getBounds());
+            }
+
+            if (circoLayer && circoLayer.getBounds().isValid()) {
+                overlayBounds.extend(circoLayer.getBounds());
+            }
+
+            if (overlayBounds.isValid() && allRows.length === 0) {
+                map.fitBounds(overlayBounds, { padding: [24, 24] });
+            }
+
+            hideNoConfigMessage();
+        } catch (error) {
+            overlaysLoaded = false;
+            console.error(error);
+        }
+    }
+
     function ensureMap() {
         if (map) {
             return true;
@@ -56,6 +160,7 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map);
         markersLayer = L.layerGroup().addTo(map);
+        void loadMapOverlays();
         setTimeout(() => map.invalidateSize(), 0);
         return true;
     }
