@@ -6,6 +6,7 @@
     let departmentLayer = null;
     let circoLayer = null;
     let overlaysLoaded = false;
+    let noConfigTimer = null;
 
     let colName = null;
     let colLat = null;
@@ -18,6 +19,9 @@
     let activeSecondary = new Set();
     let showHidden = false;
     let showHiddenOnly = false;
+
+    const DEFAULT_NO_CONFIG_MESSAGE = "Veuillez configurer les colonnes dans le panneau du widget Grist (Nom, Latitude, Longitude, Domaines, Niveaux).";
+    const NO_CONFIG_DELAY_MS = 500;
 
     function toArray(value) {
         if (Array.isArray(value)) {
@@ -46,7 +50,22 @@
     }
 
     function hideNoConfigMessage() {
+        if (noConfigTimer) {
+            clearTimeout(noConfigTimer);
+            noConfigTimer = null;
+        }
         document.getElementById("no-config").classList.add("hidden");
+    }
+
+    function scheduleNoConfigMessage(message) {
+        if (noConfigTimer) {
+            clearTimeout(noConfigTimer);
+        }
+
+        noConfigTimer = setTimeout(() => {
+            noConfigTimer = null;
+            showNoConfigMessage(message);
+        }, NO_CONFIG_DELAY_MS);
     }
 
     function normalizeFeatureName(value) {
@@ -136,10 +155,11 @@
             }
 
             if (overlayBounds.isValid() && allRows.length === 0) {
-                map.fitBounds(overlayBounds, { padding: [24, 24] });
+                map.fitBounds(overlayBounds, {
+                    padding: [24, 24],
+                    animate: false,
+                });
             }
-
-            hideNoConfigMessage();
         } catch (error) {
             overlaysLoaded = false;
             console.error(error);
@@ -327,7 +347,13 @@
         }
 
         if (bounds.isValid()) {
-            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+            map.stop();
+            map.flyToBounds(bounds, {
+                padding: [40, 40],
+                maxZoom: 13,
+                duration: 0.9,
+                easeLinearity: 0.2,
+            });
         }
     }
 
@@ -427,15 +453,16 @@
         colsSecondary = nextColsSecondary;
 
         const ready = Boolean(colName && colLat && colLng && colsPrimary.length > 0 && colsSecondary.length > 0);
-        document.getElementById("no-config").classList.toggle("hidden", ready);
 
         if (ready) {
+            hideNoConfigMessage();
             if (mappingChanged) {
                 buildFilters();
             }
             renderMap();
         } else if (markersLayer) {
             markersLayer.clearLayers();
+            scheduleNoConfigMessage(DEFAULT_NO_CONFIG_MESSAGE);
         }
     }
 
