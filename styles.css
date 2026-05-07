@@ -227,11 +227,12 @@ body {
     width: 15px;
     height: 15px;
     border-radius: 50%;
-    background: linear-gradient(90deg, rgba(255, 200, 0, 1) 0%, rgba(0, 180, 0, 1) 50%, rgba(26, 115, 232, 1) 100%);
+    background: linear-gradient(90deg, rgba(255, 200, 0, 1) 0%, rgba(0, 180, 0, .9) 50%, rgba(26, 115, 232, 1) 100%);
+    background-color: #FFC800;
     background-repeat: no-repeat;
     background-size: 100% 100%;
     background-clip: padding-box;
-    border: 1px solid rgba(17, 24, 39, 0.2);
+    border: 1px solid rgba(26, 115, 232, 0.88);
     display: inline-block;
 }
 
