@@ -42,6 +42,12 @@ body {
     justify-content: space-between;
 }
 
+#header-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 #toggle-hidden {
     background: none;
     border: none;
@@ -194,4 +200,38 @@ body {
 
 #no-config.hidden {
     display: none;
+}
+
+#toggle-hidden-only {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#toggle-hidden-only.hidden {
+    display: none;
+}
+
+#toggle-hidden-only:hover {
+    background: #e9ecef;
+}
+
+#icon-hidden-mode {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #1a73e8;
+    border: 1px solid rgba(17, 24, 39, 0.2);
+    display: inline-block;
+}
+
+#toggle-hidden-only[aria-pressed="true"] #icon-hidden-mode {
+    background: #9ca3af;
 }

@@ -14,6 +14,7 @@
     let activePrimary = new Set();
     let activeSecondary = new Set();
     let showHidden = false;
+    let showHiddenOnly = false;
 
     function toArray(value) {
         if (Array.isArray(value)) {
@@ -92,7 +93,13 @@
     }
 
     function rowIsVisible(row) {
-        if (rowMatchesFilters(row)) {
+        const matches = rowMatchesFilters(row);
+
+        if (showHiddenOnly) {
+            return !matches;
+        }
+
+        if (matches) {
             return true;
         }
         return showHidden;
@@ -360,19 +367,39 @@
         });
 
         const toggleBtn = document.getElementById("toggle-hidden");
+        const hiddenOnlyBtn = document.getElementById("toggle-hidden-only");
         if (toggleBtn) {
             const updateToggleUi = () => {
                 toggleBtn.setAttribute("aria-pressed", String(showHidden));
                 document.getElementById("icon-eye-open").style.display = showHidden ? "" : "none";
                 document.getElementById("icon-eye-closed").style.display = showHidden ? "none" : "";
+
+                if (hiddenOnlyBtn) {
+                    hiddenOnlyBtn.classList.toggle("hidden", !showHidden);
+                    hiddenOnlyBtn.setAttribute("aria-pressed", String(showHiddenOnly));
+                }
             };
 
             updateToggleUi();
             toggleBtn.addEventListener("click", () => {
                 showHidden = !showHidden;
+                if (!showHidden) {
+                    showHiddenOnly = false;
+                }
                 updateToggleUi();
                 renderMap();
             });
+
+            if (hiddenOnlyBtn) {
+                hiddenOnlyBtn.addEventListener("click", () => {
+                    if (!showHidden) {
+                        return;
+                    }
+                    showHiddenOnly = !showHiddenOnly;
+                    updateToggleUi();
+                    renderMap();
+                });
+            }
         }
     }
 
