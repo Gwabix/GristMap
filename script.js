@@ -93,13 +93,7 @@
     }
 
     function rowIsVisible(row) {
-        const matches = rowMatchesFilters(row);
-
-        if (showHiddenOnly) {
-            return !matches;
-        }
-
-        if (matches) {
+        if (rowMatchesFilters(row)) {
             return true;
         }
         return showHidden;
@@ -179,14 +173,22 @@
             groups.get(key).rows.push(row);
         }
 
-        const matchCounts = [...groups.values()].map((g) => g.rows.filter(rowMatchesFilters).length).filter((n) => n > 0);
+        const visibleGroups = [...groups.values()].filter(({ rows }) => {
+            if (!showHiddenOnly) {
+                return true;
+            }
+
+            return rows.every((row) => !rowMatchesFilters(row));
+        });
+
+        const matchCounts = visibleGroups.map((g) => g.rows.filter(rowMatchesFilters).length).filter((n) => n > 0);
         const minCount = matchCounts.length > 0 ? Math.min(...matchCounts) : 0;
         const maxCount = matchCounts.length > 0 ? Math.max(...matchCounts) : 0;
 
         const singleDomain = activePrimary.size === 1;
         const bounds = L.latLngBounds();
 
-        for (const { lat, lng, rows } of groups.values()) {
+        for (const { lat, lng, rows } of visibleGroups) {
             const matchCount = rows.filter(rowMatchesFilters).length;
             const count = matchCount;
             const countBadge = count > 0
