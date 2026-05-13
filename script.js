@@ -246,7 +246,7 @@
 
     function buildPopupHtml(groupRows, singleDomain) {
         const name = escapeHtml(groupRows[0][colName] ?? "");
-        const popupClass = singleDomain ? "popup-content single-domain" : "popup-content";
+        const popupClass = singleDomain ? "popup-content popup-content-single-domain" : "popup-content";
         let html = `<div class="${popupClass}"><h3>${name}</h3>`;
 
         const domainsToShow = [...activePrimary];
@@ -276,10 +276,9 @@
                 }
             }
 
-            html += `</ul>`;
+            html += `</ul></div>`;
         }
 
-        html += `</div>`;
         return html;
     }
 
@@ -344,7 +343,8 @@
                 popupAnchor: [0, -16],
             });
 
-            const popup = L.popup({ maxWidth: POPUP_MAX_WIDTH }).setContent(buildPopupHtml(rows, singleDomain));
+            const popupContent = buildPopupHtml(rows, singleDomain);
+            const popup = L.popup({ maxWidth: POPUP_MAX_WIDTH }).setContent(popupContent);
             L.marker([lat, lng], { icon }).bindPopup(popup).addTo(markersLayer);
             bounds.extend([lat, lng]);
         }
@@ -469,12 +469,50 @@
         }
     }
 
+    function ensurePopupStyles() {
+        if (document.getElementById("popup-single-domain-styles")) {
+            return;
+        }
+
+        const style = document.createElement("style");
+        style.id = "popup-single-domain-styles";
+        style.textContent = `
+            .leaflet-popup-content .popup-content-single-domain ul {
+                padding-left: 18px;
+                margin: 0;
+            }
+
+            .leaflet-popup-content .popup-content-single-domain .project-item {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+                margin-bottom: 6px;
+            }
+
+            .leaflet-popup-content .popup-content-single-domain .project-name,
+            .leaflet-popup-content .popup-content-single-domain .project-levels {
+                display: block;
+                width: 100%;
+            }
+
+            .leaflet-popup-content .popup-content-single-domain .project-levels {
+                font-size: 0.95em;
+                color: #4b5563;
+                white-space: normal;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     function init() {
         if (typeof grist === "undefined") {
             document.getElementById("no-config").querySelector("span").textContent =
                 "Widget non chargé dans Grist.";
             return;
         }
+
+        ensurePopupStyles();
 
         grist.ready({
             requiredAccess: "read table",
