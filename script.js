@@ -265,7 +265,7 @@
                         .filter((lc) => isNumericNonZero(proj[lc]))
                         .map((lc) => `${escapeHtml(String(proj[lc]))} ${escapeHtml(lc)}`);
                     const levelStr = levelParts.length > 0 ? `(${levelParts.join(", ")})` : "";
-                    html += `<li class="project-item"><span class="project-name">${projName}</span>${levelStr ? `<span class="project-levels">${levelStr}</span>` : ""}</li>`;
+                    html += `<li class="project-item"><div class="project-bullet-content"><span class="project-name">${projName}</span>${levelStr ? `<span class="project-levels">${levelStr}</span>` : ""}</div></li>`;
                 } else {
                     const secondaryCols = [...activeSecondary];
                     const levelParts = secondaryCols
@@ -480,14 +480,19 @@
             .leaflet-popup-content .popup-content-single-domain ul {
                 padding-left: 18px;
                 margin: 0;
+                list-style-position: outside;
             }
 
             .leaflet-popup-content .popup-content-single-domain .project-item {
+                display: list-item;
+                margin-bottom: 6px;
+            }
+
+            .leaflet-popup-content .popup-content-single-domain .project-bullet-content {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 2px;
-                margin-bottom: 6px;
             }
 
             .leaflet-popup-content .popup-content-single-domain .project-name,
