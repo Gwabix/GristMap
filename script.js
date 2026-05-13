@@ -22,6 +22,7 @@
 
     const DEFAULT_NO_CONFIG_MESSAGE = "Veuillez configurer les colonnes dans le panneau du widget Grist (Nom, Latitude, Longitude, Domaines, Niveaux).";
     const NO_CONFIG_DELAY_MS = 500;
+    const POPUP_MAX_WIDTH = 420;
 
     function toArray(value) {
         if (Array.isArray(value)) {
@@ -245,7 +246,8 @@
 
     function buildPopupHtml(groupRows, singleDomain) {
         const name = escapeHtml(groupRows[0][colName] ?? "");
-        let html = `<h3>${name}</h3>`;
+        const popupClass = singleDomain ? "popup-content single-domain" : "popup-content";
+        let html = `<div class="${popupClass}"><h3>${name}</h3>`;
 
         const domainsToShow = [...activePrimary];
 
@@ -262,8 +264,8 @@
                     const levelParts = colsSecondary
                         .filter((lc) => isNumericNonZero(proj[lc]))
                         .map((lc) => `${escapeHtml(String(proj[lc]))} ${escapeHtml(lc)}`);
-                    const levelStr = levelParts.length > 0 ? ` (${levelParts.join(", ")})` : "";
-                    html += `<li>${projName}${escapeHtml(levelStr)}</li>`;
+                    const levelStr = levelParts.length > 0 ? `(${levelParts.join(", ")})` : "";
+                    html += `<li class="project-item"><span class="project-name">${projName}</span>${levelStr ? `<span class="project-levels">${levelStr}</span>` : ""}</li>`;
                 } else {
                     const secondaryCols = [...activeSecondary];
                     const levelParts = secondaryCols
@@ -277,6 +279,7 @@
             html += `</ul>`;
         }
 
+        html += `</div>`;
         return html;
     }
 
@@ -341,7 +344,7 @@
                 popupAnchor: [0, -16],
             });
 
-            const popup = L.popup({ maxWidth: 320 }).setContent(buildPopupHtml(rows, singleDomain));
+            const popup = L.popup({ maxWidth: POPUP_MAX_WIDTH }).setContent(buildPopupHtml(rows, singleDomain));
             L.marker([lat, lng], { icon }).bindPopup(popup).addTo(markersLayer);
             bounds.extend([lat, lng]);
         }
